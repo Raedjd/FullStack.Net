@@ -1,0 +1,265 @@
+﻿@page "/processing-documents"
+@using SAPDocumentMangement.Models.Documentation
+@inject IDocumentationService DocumentationService;
+@inject IDialogService DialogService 
+@inject IMethodes Methodes
+
+<MudCardContent>
+    <MudText Typo="Typo.h6">Processing documents:</MudText>
+    <MudDataGrid @ref="documentations" T="DocumentItem" ServerData="LoadServerData">
+        <ToolBarContent>
+            <MudStack Row="true" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%;">
+
+                <MudTextField T="string"
+                              Placeholder="Search by FileName or CardCode"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium"
+                              ValueChanged="@(s => OnSearch(s))"
+                              Class="mt-0"
+                              Style="max-width: 400px;" />
+
+                <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
+                    <MudSelect T="string"
+                               Label="Status"
+                               Value="StatusFilter"
+                               ValueChanged="OnStatusChangedAsync"
+                               Clearable="true"
+                               Style="min-width: 100px;">
+                        <MudSelectItem Value="@("Open")">Open</MudSelectItem>
+                        <MudSelectItem Value="@("Success")">Success</MudSelectItem>
+                        <MudSelectItem Value="@("Failure")">Failure</MudSelectItem>
+                    </MudSelect>
+                    <MudDatePicker Label="Start Date"
+                                   @ref="startDatePicker"
+                                   @bind-Value="StartDateFilter"
+                                   DateFormat="dd/MM/yyyy"
+                                   Clearable="true"
+                                   DateChanged="OnStartDateChangedAsync" />
+                    <MudDatePicker Label="End Date"
+                                   @ref="endDatePicker"
+                                   @bind-Value="EndDateFilter"
+                                   DateFormat="dd/MM/yyyy"
+                                   Clearable="true"
+                                   DateChanged="OnEndDateChangedAsync" />
+                </MudStack>
+            </MudStack>
+        </ToolBarContent>
+        <Columns>
+            <PropertyColumn Property="x => x.Timestamp" Title="Timestamp" Format="dd/MM/yyyy" Sortable="true" />
+            <PropertyColumn Property="x => x.Filename" Title="FileName" Sortable="false" />
+            <PropertyColumn Property="x => x.Payload.CardCode" Title="CardCode" Sortable="false" />
+            <TemplateColumn T="DocumentItem" Title="Status">
+                <CellTemplate Context="cellContext">
+                    <MudChip Size="Size.Small"
+                             Style="@GetChipStyle(cellContext.Item.Status)">
+                        @GetChipLabel(cellContext.Item.Status)
+                    </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x.Payload.DocumentLines.Count" Title="Lines" Sortable="false" />
+            <TemplateColumn Title="Actions">
+                <CellTemplate Context="itemContext">
+                    <MudStack Row Spacing="1" >
+                        <MudButton OnClick="() => ShowMessageDialog(itemContext.Item)" Variant="Variant.Text">
+                            <span style="color: blue;">
+                                Messages(@itemContext.Item.Messages.Count)
+                            </span>
+                        </MudButton>
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditPayloadDialog(itemContext.Item)"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       AriaLabel="Edit" />
+                        <MudIconButton Icon="@Icons.Material.Filled.NorthEast" OnClick="() => SendPayloadDialog(itemContext.Item)"
+                                       Color="Color.Default"
+                                       Disabled="@(SendingItemId == itemContext.Item.Id)"
+                                       Size="Size.Small"
+                                       AriaLabel="Send" />
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+ 
+            
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="DocumentItem" />
+        </PagerContent>
+    </MudDataGrid>
+</MudCardContent>
+@code {
+
+    private DateTime? StartDateFilter { get; set; }
+    private DateTime? EndDateFilter { get; set; }
+    private MudDatePicker startDatePicker;
+    private MudDatePicker endDatePicker;
+    private string StatusFilter { get; set; } = "";
+
+    MudDataGrid<DocumentItem> documentations;
+    private string _searchString = string.Empty;
+    string? SendingItemId = null;
+
+    private async Task<GridData<DocumentItem>> LoadServerData(GridState<DocumentItem> state)
+    {
+
+        var page = state.Page;
+        var pageSize = state.PageSize;
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+
+        var sort = false;
+        if (sortDefinition != null)
+        {
+            sort = sortDefinition.Descending;
+        }
+        var queryString = $"page={page}&pageSize={pageSize}&sort={sort}&statusFilter={StatusFilter}&startDateFilter={StartDateFilter}&endDateFilter={EndDateFilter}&search={Uri.EscapeDataString(_searchString)}";
+
+        var items = await DocumentationService.GetAllDocumentationWithPaginationAsync(queryString);
+
+        if (items == null)
+        {
+            return new GridData<DocumentItem>
+                {
+                    Items = new List<DocumentItem>(),
+                    TotalItems = 0
+                };
+        }
+
+        return new GridData<DocumentItem>()
+            {
+                Items = items.Items,
+                TotalItems = items.TotalCount
+            };
+    }
+
+    private async Task RefreshGridAsync()
+    {
+        if (documentations != null)
+            await documentations.ReloadServerData();
+    }
+
+    private Task OnSearch(string text)
+    {
+        _searchString = text;
+        return documentations.ReloadServerData();
+    }
+
+    private async Task OnStatusChangedAsync(string newValue)
+    {
+        StatusFilter = newValue;
+        await RefreshGridAsync();
+    }
+
+    private async Task OnStartDateChangedAsync(DateTime? newValue)
+    {
+        if (newValue == null)
+        {
+            await endDatePicker.ClearAsync();
+        }
+        StartDateFilter = newValue; 
+        await RefreshGridAsync();
+        await Task.CompletedTask;
+    }
+    private async Task OnEndDateChangedAsync(DateTime? newValue)
+    {
+        if (StartDateFilter == null)
+        {
+            await endDatePicker.ClearAsync();
+            Methodes.SnackError("Please select the start date first!");
+            return;
+        }
+        EndDateFilter = newValue;
+        await RefreshGridAsync();
+        await Task.CompletedTask;
+    }
+
+    private async Task ShowMessageDialog(DocumentItem documentationItem)
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        var parameters = new DialogParameters
+            {
+                ["DocumentationItem"] = documentationItem,
+                ["DialogTitle"] = "Processing Messages"
+            };
+        var dialog = await DialogService.ShowAsync<MessageDialog>("", parameters, options);
+        
+    }
+
+    private async Task EditPayloadDialog(DocumentItem documentationItem)
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        var parameters = new DialogParameters
+            {
+                ["DocumentationItem"] = documentationItem,
+                ["DialogTitle"] = "Edit Payload"
+            };
+        var dialog = await DialogService.ShowAsync<PayloadDialog>("", parameters, options);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Canceled == false)
+        {
+            var result = await dialog.GetReturnValueAsync<DocumentItem>();
+            
+            var response = await DocumentationService.UpdateDocumentationAsync(result);
+
+            if (response != null)
+            {
+                Methodes.SnackSuccess("Payload successfully updated.");
+                await RefreshGridAsync();
+            }
+            else
+            {
+                Methodes.SnackError("An error occurred while update the payload.");
+            }
+        }
+
+    }
+
+    private async Task SendPayloadDialog(DocumentItem documentationItem)
+    {
+        SendingItemId = documentationItem.Id;
+
+        var requestPayload = new AddPayloadToSLRequest
+            {
+                Id = documentationItem.Id 
+            };
+
+        var response = await DocumentationService.SendDocumentationAsync(requestPayload);
+
+        if (response != null && response.IsAccepted)
+        {
+            Methodes.SnackSuccess("Payload successfully sent to Service Layer.");
+            await RefreshGridAsync();
+            SendingItemId = null;
+        }
+        else
+        {
+            Methodes.SnackError("Payload was rejected by the Service Layer.");
+            await RefreshGridAsync();
+            SendingItemId = null;
+        }
+
+    }
+
+    private string GetChipStyle(int status)
+    {
+        return status switch
+        {
+            0 => "background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #f57c00; font-weight:600;",
+            1 => "background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #388e3c; font-weight:600;",
+            2 => "background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #d32f2f; font-weight:600;",
+            _ => ""
+        };
+    }
+
+    private string GetChipLabel(int status)
+    {
+        return status switch
+        {
+            0 => "Open",
+            1 => "Success",
+            2 => "Failure",
+            _ => "Unknown"
+        };
+    }
+}

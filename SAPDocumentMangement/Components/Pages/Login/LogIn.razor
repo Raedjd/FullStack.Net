@@ -1,0 +1,113 @@
+﻿@page "/login"
+@using SAPDocumentMangement.Authentification
+@using SAPDocumentMangement.Components.Layout
+@using SAPDocumentMangement.Models.AccountRegistration
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@layout EmptyLayout
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ICustomAuthStateProvider CustomAuthStateProvider
+
+@attribute [AllowAnonymous]
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudContainer MaxWidth="MaxWidth.False"
+              Class="d-flex justify-center align-center"
+              Style="min-height: 100vh; background-color: #0A2540;">
+    @* Fond bleu sur tout l'écran *@
+
+    <MudPaper Elevation="6"
+              Class="pa-8 rounded-lg text-center mx-2"
+              Style="background-color: rgba(255,255,255,0.95); width: 100%; max-width: 420px;">
+
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12" Class="d-flex justify-center mb-6">
+                <MudImage Src="/Content/Images/ibs.png"
+                          Alt="InnovFlow"
+                          Width="200"
+                          Height="50"
+                          ObjectFit="ObjectFit.Contain"
+                          Style="max-width: 100%; height: auto;" />
+            </MudItem>
+
+            <MudItem xs="12">
+
+                <EditForm Model="loginInModel" FormName="Login" OnValidSubmit="HandleLoginIn">
+                    <DataAnnotationsValidator />
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField Label="Username"
+                                          @bind-Value="loginInModel.Username"
+                                          Variant="Variant.Outlined"
+                                          FullWidth="true"
+                                          Margin="Margin.Dense"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Person"
+                                          AdornmentColor="Color.Primary" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField Label="Password"
+                                          @bind-Value="loginInModel.Password"
+                                          Variant="Variant.Outlined"
+                                          InputType="InputType.Password"
+                                          FullWidth="true"
+                                          Margin="Margin.Dense"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Lock"
+                                          AdornmentColor="Color.Primary" />
+                        </MudItem>
+
+                        <MudItem xs="12" Class="d-flex justify-center mt-5">
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Filled"
+                                       FullWidth="true"
+                                       Size="Size.Large"
+                                       DisableElevation="true"
+                                       Style="background-color: #F39C12; color: white; font-weight: bold;"
+                                       OnMouseOver="(e)=> e.Target.Style.SetProperty('background-color','#D87F00')"
+                                       OnMouseOut="(e)=> e.Target.Style.SetProperty('background-color','#F39C12')">
+                                Sign In
+                            </MudButton>
+                        </MudItem>
+
+                        @if (!string.IsNullOrEmpty(error))
+                        {
+                            <MudItem xs="12" Class="mt-3">
+                                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true">
+                                    @error
+                                </MudAlert>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </EditForm>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+
+
+
+@code {
+    private LoginModel loginInModel = new LoginModel();
+    private string error;
+    
+    private async Task HandleLoginIn()
+    {
+        var res = await CustomAuthStateProvider.LogIn(loginInModel);
+        if(res != null && res.Access_token != null)
+        {
+            await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(res);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            error = "Invalid username or password.";
+        }
+    }
+}

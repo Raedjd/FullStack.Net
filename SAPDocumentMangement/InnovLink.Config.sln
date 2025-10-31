@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35806.99
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InnovLink.Config", "InnovLink.Config.csproj", "{AAAB5E7B-1D09-439F-847A-B2F64DF38283}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InnovLink.Api", "..\InnovLink.Api\InnovLink.Api.csproj", "{976C6BE6-C5A9-4939-B3FA-9789565CF793}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AAAB5E7B-1D09-439F-847A-B2F64DF38283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAAB5E7B-1D09-439F-847A-B2F64DF38283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAAB5E7B-1D09-439F-847A-B2F64DF38283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAAB5E7B-1D09-439F-847A-B2F64DF38283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{976C6BE6-C5A9-4939-B3FA-9789565CF793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{976C6BE6-C5A9-4939-B3FA-9789565CF793}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{976C6BE6-C5A9-4939-B3FA-9789565CF793}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{976C6BE6-C5A9-4939-B3FA-9789565CF793}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3E8F933F-37CF-40B7-AFE7-E8AAE6E27B21}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,194 @@
+﻿@using SAPDocumentMangement.Models.Documentation
+@using System.Reflection
+@inject IMethodes Methodes
+<MudDialog Style="width:80%; max-width:100%; border-radius:16px;">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Default" Class="font-weight-bold">
+            Edit Payload
+        </MudText>
+        <span style="color: black;">@DocumentationItem.Filename</span>
+    </TitleContent>
+
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudPaper Class="pa-4">
+
+                <MudForm @ref="form">
+                    <MudText Typo="Typo.h6" Class="mb-2">General Information</MudText>
+
+                    <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="pa-2">
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.CardCode" Label="Card Code" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.NumAtCard" Label="Num At Card" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.PayToCode" Label="Pay To Code" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.DocDueDate" Label="Doc Due Date" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.ShipToCode" Label="Ship To Code" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.U_Type_Doc" Label="Document Type" />
+                    </MudStack>
+
+                    <MudDivider Class="my-3" />
+
+                    <MudText Typo="Typo.h6" Class="mb-2">Address Extension</MudText>
+
+                    <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="pa-2" >
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToCity" Label="ShipToCity" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToBlock" Label="ShipToBlock" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToState" Label="ShipToState" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToCounty" Label="ShipToCounty" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToStreet" Label="ShipToStreet" />
+                    </MudStack>
+                    <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="pa-2">
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToCountry" Label="ShipToCountry" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToZipCode" Label="ShipToZipCode" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToBuilding" Label="ShipToBuilding" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToStreetNo" Label="ShipToStreetNo" />
+                            <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension.ShipToAddressType" Label="ShipToAddressType" />                
+                    </MudStack>
+
+                    <MudDivider Class="my-3" />
+
+                    <MudText Typo="Typo.h6" Class="mb-2">EDI</MudText>
+
+                    <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="pa-2">
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.AddressExtension" Label="Address" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.U_IBS_EDI_GLN_BY" Label="GLN BY" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.U_IBS_EDI_GLN_DP" Label="GLN DP" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.U_IBS_EDI_GLN_PAY" Label="GLN PAY" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.U_IBS_EDI_FILENAME" Label="Filename" />
+                        <MudTextField @bind-Value="DocumentationItemForm.Payload.U_IBS_DOC_NUM_EDI_ORDERS" Label="Doc Num EDI Orders" />
+                    </MudStack>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.h6" Class="mb-2">Document Lines</MudText>
+
+                    <MudTable Items="DocumentationItemForm.Payload.DocumentLines" Hover="true" Bordered="true" Class="mb-4">
+                        <HeaderContent>
+                            <MudTh>Item Code</MudTh>
+                            <MudTh>FreeText</MudTh>
+                            <MudTh>Quantity</MudTh>
+                            <MudTh>Ship Date</MudTh>
+                            <MudTh>Line Position</MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Item Code">
+                                <MudTextField @bind-Value="context.ItemCode" />
+                            </MudTd>
+                            <MudTd DataLabel="FreeText">
+                                <MudTextField @bind-Value="context.FreeText" />
+                            </MudTd>
+                            <MudTd DataLabel="Quantity">
+                                <MudNumericField @bind-Value="context.Quantity" Min="1" />
+                            </MudTd>
+                            <MudTd DataLabel="Ship Date">
+                                <MudTextField @bind-Value="context.ShipDate" Placeholder="yyyy-MM-dd" />
+                            </MudTd>
+                            <MudTd DataLabel="U_IBS_EDI_LINE_POS">
+                                <MudTextField @bind-Value="context.U_IBS_EDI_LINE_POS" />
+                            </MudTd>
+                            <MudTd>
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete"
+                                OnClick="@(() => RemoveLine(context))" />
+                            </MudTd>
+                        </RowTemplate>
+
+                    </MudTable>
+
+                    <MudStack Row="true"  Class="mt-3">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddLine">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Class="me-1" /> Add Line
+                        </MudButton>
+                    </MudStack>
+                </MudForm>
+
+            </MudPaper>
+
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    private MudForm form;
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public string DialogTitle { get; set; } = "Add/Edit Payload";
+    [Parameter]
+    public DocumentItem DocumentationItem { get; set; } = new();
+    public DocumentItem DocumentationItemForm = new();
+    private string formattedJson;
+
+    private string Payload { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+
+            if (DocumentationItemForm != null && !string.IsNullOrEmpty(DocumentationItem.Id))
+            {
+                DocumentationItemForm = DocumentationItem;
+                Payload = JsonSerializer.Serialize(DocumentationItem.Payload, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur : {ex.Message}");
+        }
+
+    }
+
+    private void AddLine()
+    {
+        DocumentationItemForm.Payload.DocumentLines.Add(new DocumentLine());
+    }
+
+    private void RemoveLine(DocumentLine line)
+    {
+        DocumentationItemForm.Payload.DocumentLines.Remove(line);
+    }
+
+    async Task Submit()
+    {
+        try
+        {
+        await form.Validate();
+        if (form.IsValid)
+        {
+
+                DocumentationItem.Payload = DocumentationItemForm.Payload;
+
+                MudDialog.Close(DialogResult.Ok(DocumentationItem));
+
+        }
+        }
+        catch (Exception ex)
+        {
+            Methodes.SnackError("Invalid Payload. Please verify your JSON syntax.");
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public static bool IsJsonValid(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return false;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return true; 
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+}

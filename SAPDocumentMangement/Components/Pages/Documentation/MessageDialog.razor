@@ -1,0 +1,61 @@
+﻿@using SAPDocumentMangement.Models.Documentation
+<MudDialog Style="width:50%; max-width:100%; border-radius:16px;">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Default" Class="font-weight-bold">
+            Processing Messages
+        </MudText>
+        <span style="color: black;">@DocumentationItem.Filename</span>
+    </TitleContent>
+
+    <DialogContent>
+        <MudStack Spacing="2" Style="max-height: 400px; overflow-y: auto;">
+            @foreach (var message in DocumentationItem.Messages?.OrderByDescending(m => m.Timestamp))
+            {
+                <MudCard Class="pa-2" Style="background-color:#f5f5f5;">
+                    <MudCardActions>
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Style="@GetChipStyle(message.Status)">
+                            @GetChipLabel(message.Status)
+                        </MudChip>
+
+                        <MudSpacer />
+
+                        <MudText Typo="Typo.caption">Entry: @message.DocEntry - Doc #@message.DocNum</MudText>
+                    </MudCardActions>
+                    <MudText Typo="Typo.inherit">@message.Message</MudText>
+                    <MudText Typo="Typo.caption">Created on: @message.Timestamp?.ToString("dd/MM/yyyy HH:mm")</MudText>
+                </MudCard>
+            }
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+@code {
+	[CascadingParameter]
+	IMudDialogInstance MudDialog { get; set; }
+	[Parameter]
+	public string DialogTitle { get; set; } = "Add/Edit";
+	[Parameter]
+	public DocumentItem DocumentationItem { get; set; } = new();
+
+    private string GetChipStyle(int status)
+    {
+        return status switch
+        {
+            1 => "background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #388e3c; font-weight:600;",
+            2 => "background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #d32f2f; font-weight:600;",
+            _ => "background-color: #e0e0e0; color: #424242; font-weight:600;"
+        };
+    }
+
+    private string GetChipLabel(int status)
+    {
+        return status switch
+        {
+            1 => "Success",
+            2 => "Failure",
+            _ => "Unknown"
+        };
+    }
+
+}

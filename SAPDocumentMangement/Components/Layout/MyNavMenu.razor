@@ -1,0 +1,65 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using SAPDocumentMangement.Constants
+<MudPaper Width="250px" Class="d-inline-flex py-3" Elevation="0">
+        
+	<MudNavMenu Class="mud-width-full">
+		<MudStack Class="px-4 mb-2"  JustifyContent="center">
+			<MudStack AlignItems="@AlignItems.Center" JustifyContent="@Justify.Center" Class="mb-2">
+				<MudImage Src="/Content/Images/ibs.png"
+						  Alt="Logo"
+						  Width="100"
+                          Height="40"
+                          />
+			</MudStack>
+		</MudStack>
+
+        <MudNavLink Href="/"
+                    Icon="@Icons.Material.Filled.Dashboard"
+                    Match="NavLinkMatch.All"
+                    Color="Color.Inherit"
+                    Style="color: #2C3E50; font-weight: 500; border-radius: 8px; padding: 6px 12px; margin: 2px 6px;"
+                    ActiveClass="active-nav-link">
+            Home
+        </MudNavLink>
+        <MudNavGroup Title="EDI"
+                     Icon="@Icons.Material.Outlined.Inventory2"
+                     Expanded="false"
+                     Class="pa-1">
+
+            <MudNavLink Href="/processing-statistics"
+                        Icon="@Icons.Material.Filled.BarChart"
+                        Match="NavLinkMatch.Prefix"
+                        Color="Color.Inherit"
+                        Style="color: #2C3E50; font-weight: 500; border-radius: 8px; padding: 6px 12px; margin: 2px 6px;"
+                        ActiveClass="active-nav-link">
+                Statistics
+            </MudNavLink>
+
+            <MudNavLink Href="/processing-documents"
+                        Icon="@Icons.Material.Filled.MenuBook"
+                        Match="NavLinkMatch.Prefix"
+                        Color="Color.Inherit"
+                        Style="color: #2C3E50; font-weight: 500; border-radius: 8px; padding: 6px 12px; margin: 2px 6px;"
+                        ActiveClass="active-nav-link">
+                Documents
+            </MudNavLink>
+
+        </MudNavGroup>
+		</MudNavMenu>
+</MudPaper>
+
+<style>
+    /* Petit style local pour le lien actif (MudBlazor ne permet pas tout inline) */
+    .active-nav-link {
+        background-color: #F39C12 !important;
+        color: white !important;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(243, 156, 18, 0.3);
+    }
+
+    /* Hover élégant sans surcharger */
+    .mud-nav-link:hover {
+        background-color: #FFF4E0 !important;
+        color: #F39C12 !important;
+    }
+</style>

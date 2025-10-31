@@ -1,0 +1,59 @@
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize] 
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Style="background-color: #0A2540; color: white; font-weight: 500;">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Style="color: #F39C12;" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudItem Style="color: #F39C12;">InnovFlow</MudItem>
+
+        <MudMenu AnchorOrigin="Origin.TopRight"
+                 TransformOrigin="Origin.TopRight"
+                 Class="ms-auto"
+                 EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                 AriaLabel="User menu">
+
+            <ActivatorContent>
+                <MudText Typo="Typo.subtitle1"
+                         Style="color: #F39C12; font-weight: 600; cursor: pointer;">
+                    @username
+                </MudText>
+            </ActivatorContent>
+            <ChildContent>
+
+                <MudDivider Class="my-1" />
+
+                <MudMenuItem Href="/logout" Style="color: #D32F2F; font-weight: 500;">
+                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Error" Class="me-2" />
+                    Logout
+                </MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    </MudAppBar>
+    <MudDrawer @bind-Open="@_drawerOpen">
+        <MyNavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+@code {
+    bool _drawerOpen = true;
+    private string username;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        username = user.FindFirst("preferred_username")?.Value ?? "Raed";
+    }
+}

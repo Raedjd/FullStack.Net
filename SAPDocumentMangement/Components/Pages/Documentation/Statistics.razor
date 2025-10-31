@@ -1,0 +1,241 @@
+﻿@page "/processing-statistics"
+@inject IDocumentationService DocumentationService;
+@inject IMethodes Methodes
+<MudCardContent>
+    <!-- Header avec titre et filtres -->
+    <MudStack Spacing="3" Class="mb-4">
+        <MudText Typo="Typo.h6"> Processing statistics:</MudText>
+
+        <MudStack Row="true" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%;">
+            <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
+                <MudDatePicker Label="Start Date"
+                @ref="startDatePicker"
+                @bind-Value="StartDateFilter"
+                DateFormat="dd/MM/yyyy"
+                Clearable="true"
+                DateChanged="OnStartDateChangedAsync" />
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Medium" Color="Color.Primary" Style="margin-top: 13px;" />
+                <MudDatePicker Label="End Date"
+                @ref="endDatePicker"
+                @bind-Value="EndDateFilter"
+                DateFormat="dd/MM/yyyy"
+                Clearable="true"
+                DateChanged="OnEndDateChangedAsync" />
+            </MudStack>
+            <MudStack Row>
+                <MudButton Variant="Variant.Outlined"
+                Color="Color.Error"
+                Size="Size.Small"
+                Style="border-color: #f28b82; color: #f28b82; margin-top: 13px;" OnClick="ClearFilters">
+                    Clear
+                </MudButton>
+            </MudStack>
+        </MudStack>
+        <MudText Typo="Typo.caption" Color="Color.Info" Class="mt-2" Style="font-style: italic;">
+            Note: If no date is selected, the results for the last 7 days will be displayed automatically.
+        </MudText>
+    </MudStack>
+
+    <!-- Cards de statistiques -->
+    <MudPaper Elevation="0"
+    Class="pa-4"
+    Style="background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%); border-radius: 12px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);">
+
+        <MudGrid Spacing="3">
+
+            <!-- Total Documents -->
+            <MudItem xs="12"
+            sm="6"
+            md="3">
+                <MudPaper Elevation="2"
+                Class="pa-4 transition-all"
+                Style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 12px; cursor: pointer; transition: all 0.3s ease;"
+                @onmouseover="@(() => {})"
+                @onmouseout="@(() => {})">
+                    <MudStack Spacing="2"
+                    AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Description"
+                        Color="Color.Primary"
+                        Size="Size.Large"
+                        Style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />
+                        <MudText Typo="Typo.h3"
+                        Color="Color.Primary"
+                        Style="font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            @TotalDocuments
+                        </MudText>
+                        <MudText Typo="Typo.body2"
+                        Style="font-weight: 500; color: #1976d2;">
+                            Total Documents
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Open -->
+            <MudItem xs="12"
+            sm="6"
+            md="3">
+                <MudPaper Elevation="2"
+                Class="pa-4 transition-all"
+                Style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                    <MudStack Spacing="2"
+                    AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.FolderOpen"
+                        Color="Color.Warning"
+                        Size="Size.Large"
+                        Style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />
+                        <MudText Typo="Typo.h3"
+                        Color="Color.Warning"
+                        Style="font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            @OpenDocuments
+                        </MudText>
+                        <MudText Typo="Typo.body2"
+                        Style="font-weight: 500; color: #f57c00;">
+                            Open
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Success -->
+            <MudItem xs="12"
+            sm="6"
+            md="3">
+                <MudPaper Elevation="2"
+                Class="pa-4 transition-all"
+                Style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                    <MudStack Spacing="2"
+                    AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                        Color="Color.Success"
+                        Size="Size.Large"
+                        Style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />
+                        <MudText Typo="Typo.h3"
+                        Color="Color.Success"
+                        Style="font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            @SuccessDocuments
+                        </MudText>
+                        <MudText Typo="Typo.body2"
+                        Style="font-weight: 500; color: #388e3c;">
+                            Success
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Failure -->
+            <MudItem xs="12"
+            sm="6"
+            md="3">
+                <MudPaper Elevation="2"
+                Class="pa-4 transition-all"
+                Style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                    <MudStack Spacing="2"
+                    AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Error"
+                        Color="Color.Error"
+                        Size="Size.Large"
+                        Style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />
+                        <MudText Typo="Typo.h3"
+                        Color="Color.Error"
+                        Style="font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            @FailureDocuments
+                        </MudText>
+                        <MudText Typo="Typo.body2"
+                        Style="font-weight: 500; color: #d32f2f;">
+                            Failure
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+    </MudPaper>
+</MudCardContent>
+
+
+@code {
+
+    private DateTime? StartDateFilter { get; set; }
+    private DateTime? EndDateFilter { get; set; }
+    private MudDatePicker startDatePicker;
+    private MudDatePicker endDatePicker;
+
+    private int TotalDocuments { get; set; } = 0;
+    private int OpenDocuments { get; set; } = 0;
+
+    private int SuccessDocuments { get; set; } = 0;
+
+    private int FailureDocuments { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadStatisticsAsync();
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur : {ex.Message}");
+        }
+
+    }
+
+    private async Task OnStartDateChangedAsync(DateTime? newValue)
+    {
+        if (newValue == null)
+        {
+            await endDatePicker.ClearAsync();
+        }
+        StartDateFilter = newValue;
+        await LoadStatisticsAsync();
+        await Task.CompletedTask;
+    }
+    private async Task OnEndDateChangedAsync(DateTime? newValue)
+    {
+        if(StartDateFilter == null){
+            await endDatePicker.ClearAsync();
+            Methodes.SnackError("Please select the start date first!");
+            return;
+        }
+        EndDateFilter = newValue;
+        await LoadStatisticsAsync();
+        await Task.CompletedTask;
+    }
+
+    private async Task LoadStatisticsAsync()
+    {
+        try
+        {
+            var queryString = $"startDateFilter={StartDateFilter}&endDateFilter={EndDateFilter}";
+
+            var statistics = await DocumentationService.GetStatisticsAsync(queryString);
+
+            if (statistics != null)
+            {
+                TotalDocuments = statistics.TotalDocuments;
+                OpenDocuments = statistics.OpenDocuments;
+                SuccessDocuments = statistics.SuccessDocuments;
+                FailureDocuments = statistics.FailureDocuments;
+            }
+            else
+            {
+                Console.WriteLine("No statistics data returned from the service.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while loading statistics: {ex.Message}");
+        }
+    }
+    private async Task ClearFilters()
+    {
+        await startDatePicker.ClearAsync();
+        await endDatePicker.ClearAsync();
+        StartDateFilter = null;
+        EndDateFilter = null;
+        await LoadStatisticsAsync();
+       
+    }
+}

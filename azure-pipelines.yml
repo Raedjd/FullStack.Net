@@ -1,0 +1,112 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+  branches:
+    include:
+      - azure-pipelines
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  dockerRegistryServiceConnection: 'innov-bs'
+  imageName-innovflow-api: 'innovbs/innovflow-api'
+  imageName-innovflow-client: 'innovbs/innovflow-client'
+
+steps:
+
+- powershell: |
+    $tag = Get-Date -Format "yyyyMMdd-HHmmss"
+    Write-Host "##vso[task.setvariable variable=tag]$tag"
+  name: GenerateTag
+  
+
+# Step1-client: Install .NET 9 Preview SDK for client
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '9.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet9
+  displayName: 'Install .NET 9 SDK for client'
+
+# Step2-client: Restore Client dependencies
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/SAPDocumentMangement/*.csproj'
+  displayName: 'Restore dependencies for Client'
+
+# Step3-client: Build Client
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/SAPDocumentMangement/*.csproj'
+    configuration: $(buildConfiguration)
+  displayName: 'Build Client'  
+
+# Step4-client: Build the Docker image for Client
+- task: Docker@2
+  inputs:
+    command: 'build'
+    repository: '$(imageName-innovflow-client)'
+    tags: '$(tag)'
+    Dockerfile: '$(Build.SourcesDirectory)/SAPDocumentMangement/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)/SAPDocumentMangement'
+  displayName: 'Build the Docker image for Client' 
+
+# Step5-client: Push the Docker image Client to Hub
+- task: Docker@2
+  inputs:
+    command: 'push'
+    containerRegistry: '$(dockerRegistryServiceConnection)'
+    repository: '$(imageName-innovflow-client)'
+    tags: '$(tag)'
+  displayName: 'Push Docker Image Client to Docker Hub'  
+
+
+
+  # Step 1: Install .NET Core SDK 8 for apis
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+  displayName: 'Starting .NET Core environment setup for Apis'
+
+  # Step 2: Restore Admin dependencies
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/SAPDocumentMangementService/*.csproj'
+  displayName: 'Restore dependencies for SAPDocumentMangementService'
+
+# Step 3: Build Admin
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/SAPDocumentMangementService/*.csproj'
+    configuration: $(buildConfiguration)
+  displayName: 'Build SAPDocumentMangementService'  
+
+# Step 4: Build the Docker image for SAPDocumentMangementService
+- task: Docker@2
+  inputs:
+    command: 'build'
+    repository: '$(imageName-innovflow-api)'
+    tags: '$(tag)'
+    Dockerfile: '**/SAPDocumentMangementService/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)'
+  displayName: 'Build the Docker image for SAPDocumentMangementService' 
+
+# Step 5: Push the Docker image SAPDocumentMangementService to Hub
+- task: Docker@2
+  inputs:
+    command: 'push'
+    containerRegistry: '$(dockerRegistryServiceConnection)'
+    repository: '$(imageName-innovflow-api)'
+    tags: '$(tag)'
+  displayName: 'Push Docker Image SAPDocumentMangementService to Docker Hub' 
+

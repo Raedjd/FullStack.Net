@@ -1,0 +1,124 @@
+networks:
+  sapdocmangementnwk:
+    name: sapdocmangementnwk
+    driver: bridge
+
+services:
+  sapdocumentmangementservice:
+    container_name: sapdocumentmangementservice
+    build:
+      context: .
+      dockerfile: SAPDocumentMangementService/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_USER=${MONGODB_USER}
+      - MONGODB_PWD=${MONGODB_PWD}
+      - MONGODB_PORT=${MONGODB_PORT}
+      - MONGODB_HOST=${MONGODB_HOST}
+      - MONGODB_AUTH_DB=${MONGODB_AUTH_DB}
+      - MONGODB_SAP_MANGEMENT_LINK_DB=${MONGODB_SAP_MANGEMENT_LINK_DB}
+      - MONGODB_SAP_MANGEMENT_LINK_USER=${MONGODB_SAP_MANGEMENT_LINK_USER}
+      - MONGODB_SAP_MANGEMENT_LINK_PWD=${MONGODB_SAP_MANGEMENT_LINK_PWD}  
+      - ClIENT_ID=${ClIENT_ID}
+      - ClIENT_SECRET=${ClIENT_SECRET}
+      - SL_ROOT=${SL_ROOT}
+      - SL_DB_NAME=${SL_DB_NAME}
+      - SL_USERNAME=${SL_USERNAME}
+      - SL_PASSWORD=${SL_PASSWORD}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - sapdocmangementnwk
+
+  sapdocumentmangement:
+    user: "0:0"
+    container_name: sapdocumentmangement
+    build:
+      context: .
+      dockerfile: SAPDocumentMangement/Dockerfile
+    environment:
+      - API_URL=https://sapdocumentmangementservice:5055/      
+      - ASPNETCORE_URLS=http://0.0.0.0:9999
+    ports:
+      - "9999:9999"
+    networks:
+      - sapdocmangementnwk
+    volumes:
+      - C:/docker_volumes/data-protection-keys-sap:/var/data-protection-keys-sap
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    restart: always
+    command:
+      - --storageEngine
+      - wiredTiger
+      - --auth
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PWD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "${MONGODB_USER}", "--password", "${MONGODB_PWD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "27017:27017"
+    volumes:
+      - C:/docker_volumes/SAP/MongoDB/mongodb-data:/data/db
+      - C:/docker_volumes/SAP/MongoDB/mongodb-log:/var/log/mongodb
+      - C:/docker_volumes/SAP/MongoDB/db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    env_file: .env
+    networks:
+      - sapdocmangementnwk
+
+  postgres-container:
+    container_name: postgres-container
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}      
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGUSER: ${PGUSER}
+    volumes:
+      - C:/docker_volumes/SAP/postgres/data:/var/lib/postgresql/data
+    networks:
+      - sapdocmangementnwk
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.4
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres-container
+      KC_DB_URL_DATABASE: ${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_DB_SCHEMA: public
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HEALTH_ENABLED: 'true'
+      #KC_HOSTNAME: keycloak.heyvaldemar.net
+      KC_HTTP_ENABLED: 'true'
+      KC_PROXY_HEADERS: 'xforwarded'
+      PROXY_ADDRESS_FORWARDING: 'true'
+    volumes:
+      - C:/docker_volumes/SAP/keycloak-db:/opt/keycloak/data
+    depends_on:
+      postgres-container:
+        condition: service_healthy
+    ports:
+      - "7200:8080"
+    networks:
+      - sapdocmangementnwk
